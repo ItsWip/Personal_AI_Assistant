@@ -36,8 +36,6 @@ class Assistant:
                     "Please set your API key in the API Settings section.")
         
         try:
-            # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
-            # do not change this unless explicitly requested by the user
             response = self.openai.chat.completions.create(
                 model="gpt-4o",
                 messages=[

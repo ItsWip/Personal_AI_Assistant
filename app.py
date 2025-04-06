@@ -119,7 +119,7 @@ def customize_assistant():
         st.session_state.chat_history = []
         st.session_state.chat_history.append({
             "role": "assistant", 
-            "content": f"Hello! I'm {name}. {personality} How can I help you today?"
+            "content": f"Hello! I'm {name}. My job: {personality} \n How can I help you today?"
         })
         st.success(f"Your assistant '{name}' has been configured!")
     else:

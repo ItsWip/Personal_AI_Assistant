@@ -5,14 +5,12 @@ from weather_service import get_weather
 from search_service import search_web
 import os
 
-# Set page config
 st.set_page_config(
     page_title="AI Assistant Builder",
     page_icon="🤖",
     layout="wide"
 )
 
-# Initialize session state variables
 if "assistant" not in st.session_state:
     st.session_state.assistant = Assistant("Assistant", "I'm a helpful AI assistant.")
 if "chat_history" not in st.session_state:
@@ -31,22 +29,17 @@ if "show_api_settings" not in st.session_state:
 
 def handle_user_message(user_input):
     """Process user input and generate assistant response"""
-    # Add user message to chat history
     st.session_state.chat_history.append({"role": "user", "content": user_input})
     
-    # Process the input to determine the type of request
     input_lower = user_input.lower()
     
-    # Create a loading message
     with st.spinner("Thinking..."):
         if "time" in input_lower and ("what" in input_lower or "tell" in input_lower or "current" in input_lower):
-            # Time request
             current_time = datetime.datetime.now().strftime("%H:%M:%S")
             current_date = datetime.datetime.now().strftime("%A, %B %d, %Y")
             response = f"The current time is {current_time} on {current_date}."
         
         elif ("weather" in input_lower or "temperature" in input_lower) and ("what" in input_lower or "how" in input_lower):
-            # Weather request
             location = extract_location(input_lower)
             if location:
                 weather_data = get_weather(location)
@@ -58,7 +51,6 @@ def handle_user_message(user_input):
                 response = "I need a location to check the weather. Please ask about the weather in a specific city."
         
         elif "search" in input_lower or "find" in input_lower or "look up" in input_lower:
-            # Web search request
             query = extract_search_query(user_input)
             if query:
                 search_results = search_web(query)
@@ -72,16 +64,13 @@ def handle_user_message(user_input):
                 response = "I need a search query. Could you please specify what you'd like me to search for?"
         
         else:
-            # General knowledge query - use the assistant
             response = st.session_state.assistant.respond_to_query(user_input)
     
-    # Add assistant response to chat history
     st.session_state.chat_history.append({"role": "assistant", "content": response})
 
 
 def extract_location(text):
     """Extract location from a weather query."""
-    # This is a simple implementation; could be improved with NLP
     common_weather_phrases = [
         "weather in ", "weather for ", "temperature in ", 
         "temperature at ", "weather at ", "how's the weather in ",
@@ -91,11 +80,9 @@ def extract_location(text):
     for phrase in common_weather_phrases:
         if phrase in text.lower():
             location = text.lower().split(phrase)[1].strip()
-            # Remove question marks and other punctuation
             location = location.replace("?", "").replace(".", "").strip()
             return location
     
-    # If no location found with phrases, look for city names (simplified approach)
     words = text.lower().split()
     if "in" in words:
         idx = words.index("in")
@@ -115,7 +102,6 @@ def extract_search_query(text):
     for indicator in search_indicators:
         if indicator in text.lower():
             query = text.lower().split(indicator)[1].strip()
-            # Remove question marks and other punctuation
             query = query.replace("?", "").replace(".", "").strip()
             return query
     
@@ -142,12 +128,10 @@ def customize_assistant():
 
 def update_api_keys():
     """Update API keys in the environment variables from session state"""
-    # Update environment variables with current session state values
     os.environ["OPENAI_API_KEY"] = st.session_state.api_keys["OPENAI_API_KEY"]
     os.environ["WEATHER_API_KEY"] = st.session_state.api_keys["WEATHER_API_KEY"]
     os.environ["SERPAPI_KEY"] = st.session_state.api_keys["SERPAPI_KEY"]
     
-    # Reinitialize the assistant with the new OpenAI API key
     if st.session_state.setup_complete:
         current_name = st.session_state.assistant.name
         current_personality = st.session_state.assistant.personality
@@ -164,11 +148,9 @@ def toggle_api_settings():
     st.session_state.show_api_settings = not st.session_state.show_api_settings
 
 
-# Main UI layout
 st.title("🤖 AI Personal Assistant Builder")
 
 if not st.session_state.setup_complete:
-    # Setup interface
     st.markdown("### Create Your Own AI Assistant")
     st.markdown("""
     Customize your personal AI assistant by giving it a name and defining its personality.
@@ -191,15 +173,12 @@ if not st.session_state.setup_complete:
                     placeholder="e.g., Friendly and helpful with a touch of humor")
     
     st.button("Create My Assistant", on_click=customize_assistant)
-    
-    # API Keys Configuration
     st.markdown("---")
     st.markdown("### API Configuration")
     st.markdown("""
     Configure API keys to enable additional features. These settings are optional but recommended for the best experience.
     """)
     
-    # OpenAI API key
     st.text_input(
         "OpenAI API Key", 
         value=st.session_state.api_keys["OPENAI_API_KEY"], 
@@ -209,7 +188,6 @@ if not st.session_state.setup_complete:
         on_change=lambda: st.session_state.api_keys.update({"OPENAI_API_KEY": st.session_state.openai_key_input})
     )
     
-    # Weather API key
     st.text_input(
         "Weather API Key (OpenWeatherMap)", 
         value=st.session_state.api_keys["WEATHER_API_KEY"], 
@@ -219,7 +197,6 @@ if not st.session_state.setup_complete:
         on_change=lambda: st.session_state.api_keys.update({"WEATHER_API_KEY": st.session_state.weather_key_input})
     )
     
-    # SerpAPI key
     st.text_input(
         "SerpAPI Key", 
         value=st.session_state.api_keys["SERPAPI_KEY"], 
@@ -233,10 +210,8 @@ if not st.session_state.setup_complete:
         update_api_keys()
 
 else:
-    # Chat interface
     st.subheader(f"Chat with {st.session_state.assistant.name}")
     
-    # Sidebar for assistant info and reset
     with st.sidebar:
         st.markdown(f"### {st.session_state.assistant.name}")
         st.markdown(f"*{st.session_state.assistant.personality}*")
@@ -249,7 +224,6 @@ else:
         - Perform web searches
         """)
         
-        # API Settings toggle
         if st.button("API Settings"):
             toggle_api_settings()
             st.rerun()
@@ -260,7 +234,6 @@ else:
             st.session_state.chat_history = []
             st.rerun()
     
-    # API Settings dialog (shown when toggled)
     if st.session_state.show_api_settings:
         with st.expander("API Settings", expanded=True):
             st.markdown("### Configure API Keys")
@@ -268,7 +241,6 @@ else:
             These keys enable additional features for your assistant. All keys are stored securely in your session.
             """)
             
-            # OpenAI API key
             st.text_input(
                 "OpenAI API Key", 
                 value=st.session_state.api_keys["OPENAI_API_KEY"], 
@@ -278,7 +250,6 @@ else:
                 on_change=lambda: st.session_state.api_keys.update({"OPENAI_API_KEY": st.session_state.openai_key_chat})
             )
             
-            # Weather API key
             st.text_input(
                 "Weather API Key (OpenWeatherMap)", 
                 value=st.session_state.api_keys["WEATHER_API_KEY"], 
@@ -288,7 +259,6 @@ else:
                 on_change=lambda: st.session_state.api_keys.update({"WEATHER_API_KEY": st.session_state.weather_key_chat})
             )
             
-            # SerpAPI key
             st.text_input(
                 "SerpAPI Key", 
                 value=st.session_state.api_keys["SERPAPI_KEY"], 
@@ -307,7 +277,6 @@ else:
                     toggle_api_settings()
                     st.rerun()
     
-    # Chat display area
     chat_container = st.container()
     with chat_container:
         for message in st.session_state.chat_history:
@@ -316,13 +285,11 @@ else:
             else:
                 st.markdown(f"**{st.session_state.assistant.name}:** {message['content']}")
     
-    # Input area
     user_input = st.chat_input("Type your message here...")
     if user_input:
         handle_user_message(user_input)
         st.rerun()
 
-# Initialize with a welcome message if this is the first run with a configured assistant
 if st.session_state.setup_complete and len(st.session_state.chat_history) == 0:
     st.session_state.chat_history.append({
         "role": "assistant", 
